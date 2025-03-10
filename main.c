@@ -166,7 +166,8 @@ DEFINE_APIFN(chtonum)
 
 DEFINE_APIFN(readbyte)
 {
-    return fe_number(ctx, getchar());
+    char c = getchar();
+    return fe_number(ctx, (c == EOF) ? 0 : c);
 }
 
 typedef struct

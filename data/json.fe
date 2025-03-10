@@ -57,7 +57,8 @@
       (let parse-literal
            (fn (l)
                (let s (read-until is-delimiter))
-               (and (is l s) (is l "true"))))
+               (if (is l s) (is l "true")
+                   (error "invalid literal '" s "'"))))
       
       (= parse
            (fn ()
