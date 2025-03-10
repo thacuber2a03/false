@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <ctype.h>
 #include <errno.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -170,6 +171,43 @@ DEFINE_APIFN(readbyte)
     return fe_number(ctx, (c == EOF) ? 0 : c);
 }
 
+static fe_Object *fe_sstring(fe_Context *ctx, const char *fmt, ...)
+{
+    char error[STR_SIZE];
+    va_list args;
+    va_start(args, fmt);
+    vsprintf(error, fmt, args);
+    va_end(args);
+    return fe_string(ctx, error);
+}
+
+DEFINE_APIFN(tonumber)
+{
+    char buf[STR_SIZE];
+    NEXT_AS_STRING(buf, STR_SIZE);
+
+    char *end;
+    errno = 0;
+    fe_Number num = strtod(buf, &end);
+
+    if (errno != 0)
+        return fe_sstring(ctx, "error on conversion: %s", strerror(errno));
+
+    if (end == buf)
+        return fe_string(ctx, "unable to convert");
+
+    for (; *end != 0; end++)
+        if (!isspace(*end))
+            return fe_string(ctx, "trailing garbage");
+
+    return fe_number(ctx, num);
+}
+
+DEFINE_APIFN(type)
+{
+    return fe_symbol(ctx, typenames[fe_type(ctx, NEXT_ARG())]);
+}
+
 typedef struct
 {
     const char *name;
@@ -177,10 +215,13 @@ typedef struct
 } APIFunc;
 
 APIFunc api[] = {
-    DECLARE_APIFN(readfile), DECLARE_APIFN(error),
+    DECLARE_APIFN(error),    DECLARE_APIFN(type),
+
+    DECLARE_APIFN(readfile),
 
     DECLARE_APIFN(write),    DECLARE_APIFN(concat),  DECLARE_APIFN(slice),
-    DECLARE_APIFN(chtonum),  DECLARE_APIFN(numtoch),
+
+    DECLARE_APIFN(chtonum),  DECLARE_APIFN(numtoch), DECLARE_APIFN(tonumber),
 
     DECLARE_APIFN(readbyte),
 };

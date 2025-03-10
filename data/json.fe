@@ -54,17 +54,43 @@
 
       (let parse nil)
       
+      (let parse-array
+           (fn ()
+               (let res '())
+               (let loop t)
+               (while loop
+                      (read-while is-whitespace)
+                      (if (is ch 93) (= loop nil)
+                          (do
+                           (= res (cons (parse) res))
+                           (read-while is-whitespace)
+                           (let chr (read-byte))
+                           (if (is chr 93) (= loop nil)
+                               (not (is chr 44)) (error "expected ']' or ','")))))
+               (rev res)))
+      
       (let parse-literal
            (fn (l)
                (let s (read-until is-delimiter))
                (if (is l s) (is l "true")
                    (error "invalid literal '" s "'"))))
       
+      (let parse-number
+           (fn ()
+               (let s (read-until is-delimiter))
+               (let n (to-number s))
+               (if (is (type n) 'number) n
+                   (error "invalid number '" s "': " n))))
+
       (= parse
            (fn ()
              (if (is ch 116) (parse-literal "true" ) ; t
                  (is ch 102) (parse-literal "false") ; f
                  (is ch 110) (parse-literal "null" ) ; n
+                 (is-digit ch) (parse-number)
+                 (is ch 91) (do ; [
+                             (read-byte)
+                             (parse-array))
                  (error "unknown char '" (num->char ch) "'"))))
 
       (read-while is-whitespace)

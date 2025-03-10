@@ -1,7 +1,5 @@
 ;;; internal components.
 
-(= error internal--error)
-
 ;; `input:read-byte` returns a single byte from stdin.
 (= input:read-byte internal--readbyte)
 
@@ -10,6 +8,13 @@
 
 ;; `(num->char x)` returns the character corresponding to the value `x` in ASCII.
 (= num->char internal--numtoch)
+
+;; `(tonumber x)` attempts to convert `x` to a number.
+;; throws an error on failure.
+(= to-number internal--tonumber)
+
+;; `(type x)` returns the type of `x` as a symbol.
+(= type internal--type)
 
 ;; `write` writes all its parameters directly to stdout,
 ;; with no separator or new line.
