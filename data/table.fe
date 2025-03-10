@@ -1,5 +1,11 @@
-;; simple table library
-;; implemented as an assoc list
+;;; simple table library
+;;; implemented as an association list
+
+;; checks if `o` is a table (an association list)
+(func table:is (o)
+      (if (atom o) nil
+          (do
+           )))
 
 ;; tries to find `key` in `table`
 ;; returns the cdr that contains the value, or nil if there is no value in `key`

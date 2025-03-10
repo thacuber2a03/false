@@ -12,13 +12,13 @@
 ;; `(> a b)` is `(< b a)`.
 (macro > (a b) (list '< b a))
 
-; zap maps `x` to its cdr.
+; `zap` maps `x` to its cdr.
 (macro zap (x) (list '= x (list 'cdr x)))
 
-;; `when` evaluates every argument after `cond`, if `cond` is not `nil`. see `unless` for its counterpart.
+;; `when` evaluates every argument after `cond`, if `cond` is *not* `nil`. see `unless` for its counterpart.
 (macro when (cond . body) (list 'if cond (cons 'do body)))
 
-;; `unless` evaluates every argument after `cond`, if `cond` is `nil`. see `when` for its counterpart.
+;; `unless` evaluates every argument after `cond`, if `cond` *is* `nil`. see `when` for its counterpart.
 (macro unless (cond . body) (list 'if (list 'not cond) (cons 'do body)))
 
 ;; `(caar x)` is the same as `(car (car x))`.
@@ -33,17 +33,31 @@
 ;; `(cddr x)` is the same as `(cdr (cdr x))`.
 (macro cddr (x) (list 'cdr (list 'cdr x)))
 
+;; `(id x)` evaluates and returns x unchanged.
+(func id (x) x)
+
+;; `(rev l)` returns `l`, reversed.
+(macro rev (l) (list 'map l 'id t))
+
+;; `map` applies `f` to each element of `l` and returns
+;; a new list with the results of those calls.
+;; `r` determines whether to return the list reversed or not.
+(func map (l f r)
+      (let res nil)
+      (while l
+             (= res (cons (f (car l)) res))
+             (zap l))
+      (if r res (rev res)))
+
 ;; `readfile:cache` contains the return value of all files that have been read so far.
 (= readfile:cache (list (cons 'table.fe (internal--readfile 'table.fe)))) ; TODO: this feels finicky
 
 ;; `readfile` reads the contents of `path`. it returns the final evaluated value,
 ;; and stores it at an internal cache (see `readfile:cache`)
-;; so you can safely call this function multiple times for the same input.
+;; so you can safely call this function multiple times for the same result.
 (func readfile (path)
       (let v (table:get readfile:cache path))
       (if v v (do
                (let r (internal--readfile path))
                (table:set readfile:cache path r)
                r)))
-
-(readfile 'table.fe)

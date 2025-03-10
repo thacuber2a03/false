@@ -13,6 +13,14 @@
                    )))
       
       (let is-digit (fn (c) (and (<= 48 c) (<= c 57))))
+      
+      (let is-delimiter
+           (fn (c)
+               (or (is-whitespace c)
+                   (is c 93 ) ; ]
+                   (is c 125) ; }
+                   (is c 44 ) ; ,
+                   )))
 
       (let append-byte (fn (s b) (concat s (num->char b))))
       
@@ -26,25 +34,37 @@
              (= nch (input:read-byte))
              och))
       
-      (let parse nil)
-      
-      (= parse
-           (fn ()
-             (if (is ch 116) (parse-literal 'true ) ; t
-                 (is ch 102) (parse-literal 'false) ; f
-                 (is ch 110) (parse-literal 'null ) ; n
-                 (error "unknown char
-                 )))
-
       (let read-while
            (fn (f)
                (let s "")
-
                (let loop t)
                (while loop
                       (= loop (f ch))
                       (if loop (= s (append-byte s (read-byte)))))
-
                s))
       
-      (read-while is-whitespace))
+      (let read-until
+           (fn (f)
+               (let s "")
+               (let break nil)
+               (while (not break)
+                      (= break (f ch))
+                      (unless break (= s (append-byte s (read-byte)))))
+               s))
+
+      (let parse nil)
+      
+      (let parse-literal
+           (fn (l)
+               (let s (read-until is-delimiter))
+               (and (is l s) (is l "true"))))
+      
+      (= parse
+           (fn ()
+             (if (is ch 116) (parse-literal "true" ) ; t
+                 (is ch 102) (parse-literal "false") ; f
+                 (is ch 110) (parse-literal "null" ) ; n
+                 (error "unknown char '" (num->char ch) "'"))))
+
+      (read-while is-whitespace)
+      (parse))
