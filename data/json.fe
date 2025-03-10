@@ -1,0 +1,50 @@
+(readfile 'input.fe)
+
+;; reads a JSON object from standard input.
+(func json:read-stdin ()
+      ; vaguely inspired by https://github.com/rxi/json.lua
+
+      (let is-whitespace
+           (fn (c)
+               (or (is c 32) ; space
+                   (is c 9 ) ; \t
+                   (is c 13) ; \r
+                   (is c 10) ; \n
+                   )))
+      
+      (let is-digit (fn (c) (and (<= 48 c) (<= c 57))))
+
+      (let append-byte (fn (s b) (concat s (num->char b))))
+      
+      (let ch (input:read-byte))
+      (let nch (input:read-byte))
+
+      (let read-byte
+           (fn ()
+             (let och ch)
+             (= ch nch)
+             (= nch (input:read-byte))
+             och))
+      
+      (let parse nil)
+      
+      (= parse
+           (fn ()
+             (if (is ch 116) (parse-literal 'true ) ; t
+                 (is ch 102) (parse-literal 'false) ; f
+                 (is ch 110) (parse-literal 'null ) ; n
+                 (error "unknown char
+                 )))
+
+      (let read-while
+           (fn (f)
+               (let s "")
+
+               (let loop t)
+               (while loop
+                      (= loop (f ch))
+                      (if loop (= s (append-byte s (read-byte)))))
+
+               s))
+      
+      (read-while is-whitespace))

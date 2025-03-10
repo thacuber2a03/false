@@ -1,0 +1,27 @@
+;; simple table library
+;; implemented as an assoc list
+
+;; tries to find `key` in `table`
+;; returns the cdr that contains the value, or nil if there is no value in `key`
+(func table:find (table key)
+      (let res nil)
+      (while table
+             (if (is (caar table) key)
+                 (do
+                  (= res (car table))
+                  (= table nil))
+                 (zap table)))
+      res)
+
+;; sets `key` in `table` to `value`.
+; TODO: this shouldn't be a macro, but I don't know what to do
+(macro table:set (table key value)
+      (list 'do
+            (list 'let 'slot (list 'table:find table key))
+            (list 'if 'slot (list 'setcar 'slot value)
+                            (list '= table (list 'cons (list 'cons key value) table)))))
+
+;; gets `key` from `table`.
+(func table:get (table key)
+      (let v (table:find table key))
+      (and v (car v)))

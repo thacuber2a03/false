@@ -1,0 +1,5 @@
+(readfile 'json.fe)
+
+(do
+ (print (json:read-stdin)))
+

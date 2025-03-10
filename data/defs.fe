@@ -1,0 +1,49 @@
+;; `macro` defines a global macro.
+(= macro (mac (name params . body)
+           (list '= name (list 'mac params (cons 'do body)))))
+
+;; `func` defines a global function.
+(macro func (name params . body)
+       (list '= name (list 'fn params (cons 'do body))))
+
+;; `(>= a b)` is `(<= b a)`.
+(macro >= (a b) (list '<= b a))
+
+;; `(> a b)` is `(< b a)`.
+(macro > (a b) (list '< b a))
+
+; zap maps `x` to its cdr.
+(macro zap (x) (list '= x (list 'cdr x)))
+
+;; `when` evaluates every argument after `cond`, if `cond` is not `nil`. see `unless` for its counterpart.
+(macro when (cond . body) (list 'if cond (cons 'do body)))
+
+;; `unless` evaluates every argument after `cond`, if `cond` is `nil`. see `when` for its counterpart.
+(macro unless (cond . body) (list 'if (list 'not cond) (cons 'do body)))
+
+;; `(caar x)` is the same as `(car (car x))`.
+(macro caar (x) (list 'car (list 'car x)))
+
+;; `(cadr x)` is the same as `(car (cdr x))`.
+(macro cadr (x) (list 'car (list 'cdr x)))
+
+;; `(cdar x)` is the same as `(cdr (car x))`.
+(macro cdar (x) (list 'cdr (list 'car x)))
+
+;; `(cddr x)` is the same as `(cdr (cdr x))`.
+(macro cddr (x) (list 'cdr (list 'cdr x)))
+
+;; `readfile:cache` contains the return value of all files that have been read so far.
+(= readfile:cache (list (cons 'table.fe (internal--readfile 'table.fe)))) ; TODO: this feels finicky
+
+;; `readfile` reads the contents of `path`. it returns the final evaluated value,
+;; and stores it at an internal cache (see `readfile:cache`)
+;; so you can safely call this function multiple times for the same input.
+(func readfile (path)
+      (let v (table:get readfile:cache path))
+      (if v v (do
+               (let r (internal--readfile path))
+               (table:set readfile:cache path r)
+               r)))
+
+(readfile 'table.fe)

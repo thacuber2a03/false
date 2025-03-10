@@ -1,0 +1,36 @@
+;;; internal components.
+
+(= error internal--error)
+
+;; `input:read-byte` returns a single byte from stdin.
+(= input:read-byte internal--readbyte)
+
+;; `(char->num x)` returns the value of `x` in ASCII.
+(= char->num internal--chtonum)
+;; `(num->char x)` returns the character
+;; corresponding to the value `x` in ASCII.
+(= num->char internal--numtoch)
+
+;; `write` writes all its parameters directly to stdout,
+;; with no separator or new line.
+(= write (fn (. xs)
+           (while xs
+                  (internal--write (car xs))
+                  (= xs (cdr xs)))))
+
+;; `concat` concatenates all its parameters into a single string,
+;; with no separator or new line.
+(= concat (fn (. xs)
+      (let res "")
+      (while xs
+             (= res (internal--concat res (car xs)))
+             (zap xs))
+      res))
+
+;; `error` converts `x` to a string, prints an error with it, and exits.
+(= error (mac (. params)
+           (list 'internal--error (cons concat params))))
+
+(internal--readfile 'defs.fe)
+(internal--readfile 'test.fe)
+(internal--readfile 'main.fe)
