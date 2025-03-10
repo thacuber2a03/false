@@ -1,8 +1,8 @@
 # TODO list
 
-- [ ] implement input functions
-	- [ ] `readbyte` (C)
-	- [ ] `readline`
+- [x] implement input functions
+	- [x] `readbyte` (C)
+	- [ ] ~~`readline`~~ (is this one really needed?)
 - [ ] implement a JSON/RPC reader/writer
 	- (the JSON library will be the hard part, the RPC reader just piggybacks off of it)
 - [ ] implement a fe parser
