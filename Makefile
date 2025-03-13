@@ -1,7 +1,8 @@
 DBG := gdb
+SRC := false.c
 OUT := ./false
 
-$(OUT): main.c
+$(OUT): $(SRC)
 	gcc -g fe/src/fe.c $^ -o $@
 
 run: $(OUT)
@@ -9,3 +10,6 @@ run: $(OUT)
 
 debug: $(OUT)
 	$(DBG) $(OUT)
+
+clean:
+	rm $(OUT) -f

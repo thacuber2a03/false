@@ -57,10 +57,13 @@
       (let parse-array
            (fn ()
                (let res '())
+               (read-byte)
                (let loop t)
                (while loop
                       (read-while is-whitespace)
-                      (if (is ch 93) (= loop nil)
+                      (if (is ch 93) (do
+                                      (read-byte)
+                                      (= loop nil))
                           (do
                            (= res (cons (parse) res))
                            (read-while is-whitespace)
@@ -68,6 +71,34 @@
                            (if (is chr 93) (= loop nil)
                                (not (is chr 44)) (error "expected ']' or ','")))))
                (rev res)))
+      
+      (let parse-object
+           (fn ()
+               (let res '())
+               (read-byte)
+               (let loop t)
+               (while loop
+                      (read-while is-whitespace)
+                      (if (is ch 123) (do ; }
+                                       (read-byte)
+                                       (= loop nil))
+                          (is ch 34) ; "
+                          (do
+                           (let key (parse))
+                           (read-while is-whitespace)
+                           (if (is ch 58) ; :
+                               (do
+                                (read-byte)
+                                (read-while is-whitespace)
+                                (let val (parse))
+                                (table:set res key val)
+                                (read-while is-whitespace)
+                                (let chr (read-byte))
+                                (if (is chr 125) (= loop nil)
+                                    (not (is chr 44)) (error "expected '}' or ','")))
+                               (error "expected ':' after key")))
+                          (error "expected string for key")))
+               res))
       
       (let parse-literal
            (fn (l)
@@ -81,6 +112,21 @@
                (let n (to-number s))
                (if (is (type n) 'number) n
                    (error "invalid number '" s "': " n))))
+      
+      (let parse-string
+           (fn ()
+               (let res "")
+               (read-byte)
+               (while (not (is ch 34))
+                      (if (< ch 32) (error "control character in string")
+                          ; not doing escape chars right now
+                          (do
+                           (= res (append-byte res ch))
+                           ))
+                      (read-byte))
+               (if (is ch 0) (error "expected closing quote for string")
+                   (read-byte))
+               res))
 
       (= parse
            (fn ()
@@ -88,9 +134,9 @@
                  (is ch 102) (parse-literal "false") ; f
                  (is ch 110) (parse-literal "null" ) ; n
                  (is-digit ch) (parse-number)
-                 (is ch 91) (do ; [
-                             (read-byte)
-                             (parse-array))
+                 (is ch 34) (parse-string)           ; "
+                 (is ch 91) (parse-array)            ; [
+                 (is ch 123) (parse-object)          ; {
                  (error "unknown char '" (num->char ch) "'"))))
 
       (read-while is-whitespace)
